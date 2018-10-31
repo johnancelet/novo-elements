@@ -307,13 +307,13 @@ export class BasePickerResults {
    *
    * @description
    */
-  selectMatch(event?: any, item?: any) {
+  selectMatch(event?: any, item?: any, selectedCategory?: any) {
     if (event) {
       event.stopPropagation();
       event.preventDefault();
     }
 
-    let selected = this.activeMatch;
+    const selected = selectedCategory ? { category: selectedCategory, item: this.activeMatch } : this.activeMatch;
     if (selected && this.parent) {
       this.parent.value = selected;
       this.selectingMatches = true;

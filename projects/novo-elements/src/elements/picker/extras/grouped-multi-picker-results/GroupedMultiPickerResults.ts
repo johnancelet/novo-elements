@@ -32,6 +32,7 @@ import { NovoLabelService } from '../../../../services/novo-label-service';
                     [attr.data-automation-id]="category.label"
                     [class.disabled]="isLoading">
                     <item-content>
+                        <i *ngIf="category.iconClass" [class]="category.iconClass"></i>
                         <span data-automation-id="label">{{ category.label }}</span>
                     </item-content>
                     <item-end>
@@ -39,7 +40,7 @@ import { NovoLabelService } from '../../../../services/novo-label-service';
                     </item-end>
                 </novo-list-item>
             </novo-list>
-            <footer class="grouped-multi-picker-groups-footer" *ngIf="customFilterEnabled" data-automation-id="footer" [class.disabled]="isLoading">
+            <footer class="grouped-multi-picker-groups-footer" *ngIf="displayCustomFilterSwitch" data-automation-id="footer" [class.disabled]="isLoading">
                 <novo-switch [(ngModel)]="customFilterValue" (onChange)="fireCustomFilter($event)" data-automation-id="switch"></novo-switch>
                 <label data-automation-id="label">{{ customFilterLabel }}</label>
             </footer>
@@ -89,6 +90,7 @@ export class GroupedMultiPickerResults extends BasePickerResults implements OnIn
   public customFilterEnabled: boolean = false;
   public customFilterLabel: string;
   public placeholder: string = '';
+  public displayCustomFilterSwitch: boolean = true;
 
   private keyboardSubscription: Subscription;
   private internalMap: Map<string, { value: string; label: string; items: { value: string; label: string }[] }> = new Map<
@@ -107,6 +109,7 @@ export class GroupedMultiPickerResults extends BasePickerResults implements OnIn
     // Custom filter
     if (this.config.customFilter) {
       this.customFilterEnabled = true;
+      this.displayCustomFilterSwitch = !Boolean(this.config.customFilter.hideSwitch);
       this.customFilterLabel = this.config.customFilter.label;
       this.customFilterValue = !!this.config.customFilter.defaultFilterValue;
       this.ref.markForCheck();
@@ -206,7 +209,7 @@ export class GroupedMultiPickerResults extends BasePickerResults implements OnIn
   public selectMatch(event?: MouseEvent, item?: { value: string; label: string }): boolean {
     // Set focus
     this.inputElement.nativeElement.focus();
-    return super.selectMatch(event, item);
+    return super.selectMatch(event, item, this.selectedCategory);
   }
 
   public fireCustomFilter(value: boolean) {
@@ -274,15 +277,18 @@ export class GroupedMultiPickerResults extends BasePickerResults implements OnIn
     let matches: { value: string; label: string; filterValue?: any }[] = array;
     if (this.searchTerm && this.searchTerm.length !== 0 && this.selectedCategory) {
       matches = matches.filter((match) => {
-        return ~String(match.label)
-          .toLowerCase()
-          .indexOf(this.searchTerm.toLowerCase());
+        const searchTerm = this.searchTerm.toLowerCase();
+        return match.label.toLowerCase().indexOf(searchTerm) > -1 || match.value.toLowerCase().indexOf(searchTerm) > -1;
       });
     }
     if (this.customFilterEnabled && this.config.customFilter.matchFunction && !ignoreCustomFilter) {
-      matches = matches.filter((match) => {
-        return this.config.customFilter.matchFunction(match, this.customFilterValue);
-      });
+      const matchesToOmit: string[] = this.parent.selected.reduce((acc, val) => {
+        if (val.category.value === this.selectedCategory.value) {
+          acc.push(val.item.value);
+        }
+        return acc;
+      }, []);
+      matches = matches.filter((match) => this.config.customFilter.matchFunction(match, this.customFilterValue, matchesToOmit));
     }
     return matches;
   }
