@@ -209,7 +209,7 @@ export class GroupedMultiPickerResults extends BasePickerResults implements OnIn
   public selectMatch(event?: MouseEvent, item?: { value: string; label: string }): boolean {
     // Set focus
     this.inputElement.nativeElement.focus();
-    return super.selectMatch(event, item, this.selectedCategory);
+    return super.selectMatch(event, this.selectedCategory);
   }
 
   public fireCustomFilter(value: boolean) {
