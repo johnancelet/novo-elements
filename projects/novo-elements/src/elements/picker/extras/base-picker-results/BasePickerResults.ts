@@ -307,7 +307,7 @@ export class BasePickerResults {
    *
    * @description
    */
-  selectMatch(event?: any, item?: any, selectedCategory?: any) {
+  selectMatch(event?: any, selectedCategory?: any) {
     if (event) {
       event.stopPropagation();
       event.preventDefault();
